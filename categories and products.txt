@@ -1,0 +1,84 @@
+{
+    "BCC_KZ": [
+        "BCC_KZ_Common"
+    ],
+    "SmartQR": [
+        "Smart_QR",
+        "SmartQR_Common"
+    ],
+    "Deposits": [
+        "Deposits_Common",
+        "My_goal",
+        "Rakhmet",
+        "Champion"
+    ],
+    "Cards": [
+        "JuniorBank",
+        "BlackEdition",
+        "UlkengeKurmet",
+        "DragonCard",
+        "Cards_Common",
+        "GoldCard",
+        "bccpay_2_0",
+        "BccBlack",
+        "IronCard",
+        "CardCard",
+        "TravelCard",
+        "Pakety_uslug"
+    ],
+    "Avtokredit":[
+        "Avtokredit_Common",
+        "Avtokredit_probeg_fl",
+        "Lgotnoe_avtokredit",
+        "Avto_avtosalon",
+        "Avtokredit_probeg_avtosalon"
+    ],
+    "Ipoteka": [
+        "Ipoteka_Common",
+        "_7_20_25",
+        "Ipoteka_DDU",
+        "Online_ipoteka"
+    ],
+    "Smart QR": [
+        "SmartQR_Common",
+        "Smart_QR"
+    ],
+    "Zalogovoe": [
+        "Zalogovoe_Common",
+        "Zaklad_deneg",
+        "Zalog_deposit",
+        "Zalog_nedvizhimosti"
+    ],
+    "Credits": [
+        "Kredit_nalichnymi",
+        "Refinancing",
+        "Credit_BI",
+        "Credits_Common",
+        "Dengi_do_ZP"
+    ],
+    "PKO": [
+        "PKO_Common"
+    ],
+    "Transfers": [
+        "WesternUnion",
+        "Koronapay",
+        "CardTransfers",
+        "MobileTransfers",
+        "Swift",
+        "Transfers_Common",
+        "UzbekistanTransfers",
+        "AccountTransfers"
+    ],
+    "Payments": [
+        "Payments_Common",
+        "Dlja_klienta_FL_new"
+    ],
+    "Savings": [
+        "Accounts",
+        "FX_exchanger",
+        "Safe",
+        "Gold",
+        "Metal",
+        "Investitsii_v_bcc_kz"
+    ]
+}
