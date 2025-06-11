@@ -1,0 +1,131 @@
+import json
+import os
+import sys
+import json
+from time import perf_counter
+import boto3
+import botocore
+import streamlit as st
+from tqdm.auto import tqdm
+
+os.environ['http_proxy'] = ""
+os.environ['https_proxy'] = ""
+
+
+VPC_ENDPOINT_URL = "https://vpce-020ae5d25917d44a7-4jbuf238.bedrock-runtime.eu-central-1.vpce.amazonaws.com"
+bedrock_runtime = boto3.client(
+    'bedrock-runtime',
+    endpoint_url=VPC_ENDPOINT_URL,
+    aws_access_key_id="*******************************************",
+    aws_secret_access_key="**************************************************",
+    region_name="eu-central-1"                          
+)
+
+MODEL_ID = "eu.anthropic.claude-3-5-sonnet-20240620-v1:0"
+ACCEPT_JSON = "application/json"
+CONTENT_TYPE_JSON = "application/json"
+
+
+import streamlit as st
+import json
+import botocore
+import docx
+import pandas as pd
+from time import perf_counter
+from tqdm import tqdm
+
+# Constants for AWS Bedrock
+MODEL_ID = "anthropic.claude-3-5-sonnet"
+ACCEPT_JSON = "application/json"
+CONTENT_TYPE_JSON = "application/json"
+
+# Define target language mapping
+LANGUAGE_MAP = {
+    ("Kazakh", "Russian"): "Қазақшадан орысшаға аудар",
+    ("Kazakh", "English"): "Translate from Kazakh to English",
+    ("Russian", "Kazakh"): "Аудар орыс тілінен қазақ тіліне",
+    ("Russian", "English"): "Translate from Russian to English",
+    ("English", "Kazakh"): "Ағылшын тілінен қазақ тіліне аудар",
+    ("English", "Russian"): "Translate from English to Russian",
+}
+
+
+def build_body(prompt: str) -> str:
+    return json.dumps({
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 5000,
+        "temperature": 0,
+        "top_k": 250,
+        "top_p": 0.99,
+        "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+    }, ensure_ascii=False)
+
+
+def translate_text(src_text: str, source_lang: str, target_lang: str) -> tuple[str, float]:
+    if (source_lang, target_lang) not in LANGUAGE_MAP:
+        return f"Translation from {source_lang} to {target_lang} not supported.", 0.0
+
+    prompt = f"{LANGUAGE_MAP[(source_lang, target_lang)]} без форматирования: {src_text}"
+    body = build_body(prompt)
+    start = perf_counter()
+
+    try:
+        for _ in tqdm(range(1), desc="Invoking Bedrock"):
+            response = bedrock_runtime.invoke_model(
+                body=body,
+                modelId=MODEL_ID,
+                accept=ACCEPT_JSON,
+                contentType=CONTENT_TYPE_JSON,
+            )
+        answer = json.loads(response.get("body").read())
+        translation = answer["content"][0]["text"]
+    except botocore.exceptions.ClientError as error:
+        if error.response["Error"]["Code"] == "AccessDeniedException":
+            translation = (
+                "AccessDeniedException: проверьте права IAM.\n"
+                "https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_access-denied.html\n"
+                "https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam.html"
+            )
+        else:
+            raise
+    latency = perf_counter() - start
+    return translation, latency
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Streamlit UI
+# ──────────────────────────────────────────────────────────────────────────────
+st.set_page_config(page_title="Multilingual Translator", page_icon="🔄")
+
+st.title("Multilingual Translator using Claude 3.5 via Bedrock")
+
+source_lang = st.selectbox("Source language", ["Kazakh", "Russian", "English"])
+target_lang = st.selectbox("Target language", ["Kazakh", "Russian", "English"])
+
+text_input = st.text_area("Enter text to translate (or upload a file below):", height=150)
+uploaded_file = st.file_uploader("Or upload a .docx or .xlsx file", type=["docx", "xlsx"])
+
+translate_btn = st.button("Translate")
+
+if translate_btn:
+    if uploaded_file:
+        if uploaded_file.name.endswith(".docx"):
+            doc = docx.Document(uploaded_file)
+            full_text = "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
+        elif uploaded_file.name.endswith(".xlsx"):
+            df = pd.read_excel(uploaded_file)
+            full_text = "\n".join(df.astype(str).fillna("").values.flatten())
+        else:
+            st.error("Unsupported file format.")
+            st.stop()
+    else:
+        full_text = text_input.strip()
+
+    if not full_text:
+        st.warning("Please input or upload some text.")
+    else:
+        with st.spinner("Translating..."):
+            translated, elapsed = translate_text(full_text, source_lang, target_lang)
+        st.subheader(f"Translation ({target_lang})")
+        st.code(translated, language="text")
+        st.caption(f"Translation took {elapsed:.2f} seconds")
